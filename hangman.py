@@ -2,11 +2,12 @@ import requests
 import random
 from time import sleep
 
-DIFFICULTY = 6
+DIFFICULTY = 3
 
 FREQ = 100/DIFFICULTY
 DISABLE_ANIMATION = False
 WPM = 300
+MAX_INCORRECT_GUESSES = 6
 
 def get_a_word(length):
     url = f"https://api.datamuse.com/words?sp={'?'*length}&md=f&max=1000"
@@ -45,9 +46,45 @@ for i,x in enumerate(WORD_LENGTH):
 
 while True:
     length = random.choice(WORD_LENGTH_WEIGHTED)
-    word = get_a_word(length)
+    word = get_a_word(length).lower()
     if word == "ERRORS":
         raise Exception("Error in fetching word sorry :(")
     char_animation(f"Word is of length {length}\n")
-    char_animation(f"Word is: {word}\n")
-    #Actual logic of the game
+    
+    current_guess = "_"*length
+    already_tried = {" "}
+
+    incorrect_guesses = 0
+
+    while True:
+        char_animation(f"Word is: {current_guess}\n")
+        try:
+            guess = char_animation_in("Enter your guess: ")[0].lower()
+        except:
+            pass
+        while guess in already_tried:
+            try:
+                guess = char_animation_in("You've already tried that, Enter your guess: ")[0].lower()
+            except:
+                pass
+        
+        already_tried.add(guess)
+
+        if guess in word:
+            char_animation("Correct guess\n")
+            for i in range(len(current_guess)):
+                if word[i] == guess:
+                    current_guess = current_guess[:i] + guess + current_guess[i+1:]
+        else:
+            char_animation("Incorrect guess\n")
+            incorrect_guesses += 1
+            if incorrect_guesses >= MAX_INCORRECT_GUESSES:
+                char_animation("Sorry you lost")
+                char_animation(f"Word was {word}\n")
+                break
+        if current_guess == word:
+            char_animation("Congratulations you won")
+            break
+    
+    if char_animation_in("Press enter to play again") != "":
+        break
