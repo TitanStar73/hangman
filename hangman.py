@@ -7,7 +7,74 @@ DIFFICULTY = 3
 FREQ = 100/DIFFICULTY
 DISABLE_ANIMATION = False
 WPM = 300
-MAX_INCORRECT_GUESSES = 6
+
+HANG_ANIMATION = [
+r"""
++---+
+|   |
+    |
+    |
+    |
+    |
+=========
+""",
+r"""
++---+
+|   |
+O   |
+    |
+    |
+    |
+=========
+""",
+r"""
++---+
+|   |
+O   |
+|   |
+    |
+    |
+=========
+""",
+r"""
++---+
+|   |
+O   |
+/|  |
+    |
+    |
+=========
+""",
+r"""
++---+
+|   |
+O   |
+/|\ |
+    |
+    |
+=========
+""",
+r"""
++---+
+|   |
+O   |
+/|\ |
+/   |
+    |
+=========
+""",
+r"""
++---+
+|   |
+O   |
+/|\ |
+/ \ |
+    |
+=========
+"""
+]
+
+MAX_INCORRECT_GUESSES = len(HANG_ANIMATION) - 1
 
 def get_a_word(length):
     url = f"https://api.datamuse.com/words?sp={'?'*length}&md=f&max=1000"
@@ -44,7 +111,9 @@ for i,x in enumerate(WORD_LENGTH):
     for j in range(16 - (4-i)**2):
         WORD_LENGTH_WEIGHTED.append(x)
 
+char_animation("Welcome to Hangman\n")
 while True:
+    char_animation("Finding you a word...")
     length = random.choice(WORD_LENGTH_WEIGHTED)
     word = get_a_word(length).lower()
     if word == "ERRORS":
@@ -57,16 +126,22 @@ while True:
     incorrect_guesses = 0
 
     while True:
+        print(HANG_ANIMATION[incorrect_guesses])
         char_animation(f"Word is: {current_guess}\n")
-        try:
-            guess = char_animation_in("Enter your guess: ")[0].lower()
-        except:
-            pass
-        while guess in already_tried:
+
+        while True:
             try:
-                guess = char_animation_in("You've already tried that, Enter your guess: ")[0].lower()
+                guess = char_animation_in("Enter your guess: ").lower()
             except:
-                pass
+                continue
+            if len(guess) != 1:
+                char_animation("Please enter only one alphabet")
+            elif guess in already_tried:
+                char_animation("You've already tried that")
+            elif guess.isalpha() == False:
+                char_animation("Please enter an alphabet")
+            else:
+                break
         
         already_tried.add(guess)
 
@@ -80,6 +155,7 @@ while True:
             incorrect_guesses += 1
             if incorrect_guesses >= MAX_INCORRECT_GUESSES:
                 char_animation("Sorry you lost")
+                print(HANG_ANIMATION[-1])
                 char_animation(f"Word was {word}\n")
                 break
         if current_guess == word:
@@ -88,3 +164,5 @@ while True:
     
     if char_animation_in("Press enter to play again") != "":
         break
+
+
